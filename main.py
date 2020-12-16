@@ -20,14 +20,15 @@ nn = NeuralNetwork(24, 4, learningRate)
 model = nn.model
 DQN = Dqn(gamma, maxMemory)
 
-
 # NAUKA/TRENING
 epoch = 1
 scoreInEpochs = []
 meanScore = 0
-bestScore = 0
+bestScore = [0,0]
+fullMemoryEpoch = 0
+win = False
 
-while epoch <= epochs:
+while not win:
     # NOWA GRA -- reset środowiska, i początkowy input
     env.reset()
     currentState = env.newState(False)
@@ -42,7 +43,7 @@ while epoch <= epochs:
             action = argmax(model.predict(currentState))
 
         # podjęcie akcji
-        nextState, reward, gameOver = env.step(action)
+        nextState, reward, gameOver, win = env.step(action)
         env.drawScreen()
 
         # umieszczenie ruchu w pamięci i trening sieci na pobranym batchu
@@ -52,20 +53,22 @@ while epoch <= epochs:
 
         currentState = nextState
 
-    # statystyki z pojedynczej gry
-    if env.score > bestScore:
-        bestScore = env.score
-    print("Epoch:\t", epoch, "Score:\t", env.score, "Moves:\t", env.moves, "Epsilon:\t", round(epsilon, 5), "Best score:", bestScore)
-
     # zmniejszenie prawdopodobieństwa losowości
     if epsilon > 0.05:
         epsilon *= epsilonMultiplier
     else:
         epsilon = 0.05
 
+    # statystyki z pojedynczej gry
+    if env.score > bestScore[0]:
+        bestScore = [env.score,env.moves]
+        print("NEW BEST SCORE:",bestScore[0],"points in", bestScore[1], "moves")
+    print("Epoch:\t", epoch, "Score:\t", env.score, "Moves:\t", env.moves, "Epsilon:\t", round(epsilon, 5), "Best score:", bestScore[0])
+
     # co 100 epok -- statystyka ze 100 epok
     meanScore+=env.score
     if epoch % 100 == 0:
+        win = True
         scoreInEpochs.append(meanScore/100)
         print("Mean in last 100 epochs:", meanScore/100, "All time best score:", bestScore, "Actual Memory Capacity:",len(DQN.memory))
         plt.plot(scoreInEpochs)
@@ -73,5 +76,10 @@ while epoch <= epochs:
         plt.ylabel('Średni wynik w 100 epokach')
         plt.show()
         meanScore = 0
+
+    # zapisanie epoki, w której pamięć się zapełniła
+    if len(DQN.memory) < maxMemory:
+        fullMemoryEpoch = epoch+1
+
     epoch += 1
 model.save('model.h5')

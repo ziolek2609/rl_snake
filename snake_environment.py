@@ -26,14 +26,14 @@ class SnakeEnvironment():
         self.snakeLoc = [] # lista lokalizacji segmentów węża
         # mapa ekranu, na której 0 -> puste pole, 0.5 -> segment snake'a, 1 -> jabłko
         self.screenMap = zeros((self.SEGMENTS,self.SEGMENTS))
-        #zapoczątkowanie węża(3segmenty) i jabłka
+        # zapoczątkowanie węża (3 segmenty) i jabłka
         for i in range(3):
             self.snakeLoc.append([2-i,1])
             self.screenMap[1,2-i] = 0.5
         self.appleLoc = self.createApple()
-        self.drawScreen() # rysowanie elementów
+        self.drawScreen()
 
-    # tworzenie jabłko w wolnej lokacji
+    # tworzenie jabłko w wolnej lokacji na screenMap
     def createApple(self):
         x = randint(0,self.SEGMENTS-1)
         y = randint(0,self.SEGMENTS-1)
@@ -56,26 +56,28 @@ class SnakeEnvironment():
 
     # pojedyncze poruszenie węża
     def moveSnake(self, nextLoc):
-        self.snakeLoc.insert(0,nextLoc) # wstawienie nowego segmentu przed pierwszy segment
-
+        # aktualizacja snakeLoc i appleLoc
+        self.snakeLoc.insert(0,nextLoc)
         if nextLoc != (self.appleLoc[1],self.appleLoc[0]): # niezjedzenie jabłka -> usunięcie ostatniego segmentu węża
             self.snakeLoc.pop(len(self.snakeLoc)-1)
-        else: # zjedzenie jabłka -> nowe jabłko i score+1
-            self.appleLoc = self.createApple()
+        else: # zjedzenie jabłka -> nowe jabłko(o ile not win) i score+1
             self.score +=1
+            if self.score < self.SEGMENTS**2-3:
+                self.appleLoc = self.createApple()
 
         # aktualizacja screenMap
         self.screenMap = zeros((self.SEGMENTS,self.SEGMENTS))
+        self.screenMap[self.appleLoc[0],self.appleLoc[1]] = 1
         for i in self.snakeLoc:
             self.screenMap[i[1],i[0]] = 0.5
-        self.screenMap[self.appleLoc[0],self.appleLoc[1]] = 1
 
     # obliczenie newState, który jest inputem do sieci neuronowej
     def newState(self, wallCrush):
         # input to 24 liczby: 8 kierunków patrzenia(N,NE,E,SE,S,SW,W,NW)*3 dystanse[appleDistance, snakeDistance, wallDistance]
         # jeśli jabłko bądź segmet węża nie jest widoczny to domyślna wartość 0
         # jeśli wąż uderzy w ściane (wallCrush==True) -- odległość od ściany na danym kierunku to 0
-        # na kierunkach NE,SE,SW,NW wartość odległości mówi o ilości segmetów pokonywanych na skos
+        # na kierunkach NE,SE,SW,NW wartość odległości mówi o ilości segmetów pokonywanych na skos,
+        # więc jeśli jabłko jest na kolejnym polu planszy patrząc na skos to wartość wynosi 1
         newState = zeros((1,24))
 
         # NORTH
@@ -162,9 +164,6 @@ class SnakeEnvironment():
             elif self.direction == 3:
                 newState[0][20] = 0
 
-        #print(self.screenMap)
-        #print(self.snakeLoc)
-        #print(newState)
         return newState
 
     # krok w grze i przyszłej nauce
@@ -172,6 +171,7 @@ class SnakeEnvironment():
         self.moves +=1
         gameOver = False
         wallCrush = False
+        win = False
         reward = self.LIVINGPENALTY # domyślna nagroda to livingPenalty
 
         # wykluczneie możliwości skrętu o 180 stopni
@@ -184,7 +184,7 @@ class SnakeEnvironment():
         elif action == 0 and self.direction == 2:
             action = 2
 
-        # aktualizowanie gameOver i nagrody przy poszczególnych ruchach(0,1,2,3)
+        # krok w grze -- możliwe scenariusze -- ustalenie nagrody i stanów: gameOver, win oraz wallCrush
         if action == 0: # ruch w górę
             if self.snakeLoc[0][1]>0:
                 if self.screenMap[self.snakeLoc[0][1]-1][self.snakeLoc[0][0]] == 0.5: # zjedzenie samego siebie -> PRZEGRANA
@@ -233,20 +233,25 @@ class SnakeEnvironment():
                 gameOver = True
                 wallCrush = True
                 reward = self.NEGREWARD
+        if self.score == self.SEGMENTS**2-3: # WYGRANA!:)
+            win = True
+            gameOver = True
+            print("YOU ARE THE WINNER!")
 
-        self.direction = action # zmiana kierunku ruchu
-        self.drawScreen() # aktualizacja ekranu
-        pygame.time.wait(self.WAITTIME) # czas między przesunięciami
-        newState = self.newState(wallCrush) # aktualizacja stanu -- inputu do sieci
+        # aktualizacja stanu gry(inputu do sieci) i ekranu gry
+        self.direction = action
+        self.drawScreen()
+        pygame.time.wait(self.WAITTIME)
+        newState = self.newState(wallCrush)
 
-        return newState, reward, gameOver
+        return newState, reward, gameOver, win
 
 # główna pętla do gry samodzielnej
 if __name__ == '__main__':
-    env = SnakeEnvironment()
-    gameOver = False
-    action = 1 # początkowy ruch w prawo jako domyślny
-    while True:
+    env = SnakeEnvironment(waitTime=300,segments=4)
+    action = env.direction
+    win = False
+    while not win:
         # sterowanie
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -260,11 +265,10 @@ if __name__ == '__main__':
                     action = 2
                 elif event.key == pygame.K_LEFT:
                     action = 3
-
-        _,_,gameOver = env.step(action) # podjęcie akcji (przy grze samodzielnej potrzeba tylko gameOver; reward i newState używa się w treningu)
+        _,_,gameOver,win = env.step(action) # podjęcie akcji (przy grze samodzielnej potrzeba tylko gameOver i win; reward i newState używa się w treningu)
         if gameOver: # przegrana i wyświetlenie wynikóww konsoli
             print("WYNIK: ", env.score,"\nLICZBA RUCHÓW: ", env.moves)
             # reset środowiska
             env.reset()
-            action = 1
+            action = env.direction
             gameOver = False
