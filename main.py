@@ -1,75 +1,77 @@
-from numpy import zeros, argmax
+from numpy import argmax
 from random import random, randint
 import matplotlib.pyplot as plt
 from dqn import Dqn
 from neural_network import NeuralNetwork
 from snake_environment import SnakeEnvironment
 
-# parametry uczenia
-learningRate = 0.005 #współczynnik uczenia
-gamma = 0.9 # paeametr dyskontujący do dqn --> równanie Bellmana
-batchSize = 16 # wielkość wkładu do sieci
-epsilon = 1 # prawdopodobieństwo podjęcia losowego ruchu przez snake'a
-epsilonMultiplier = 0.995 # zmiana epsilon bo każdej grze
-epochs = 2000 # liczba epok (rozegranych gier)
-maxMemory = 2000
+# PARAMETRY UCZENIA
+learningRate = 0.01  # współczynnik uczenia
+gamma = 0.9  # parametr dyskontujący do dqn
+batchSize = 128  # wielkość wkładu do sieci
+epsilon = 1  # prawdopodobieństwo podjęcia losowego ruchu przez snake'a w danej epoce
+epsilonMultiplier = 0.999  # zmiana epsilon bo każdej grze
+epochs = 100000  # liczba epok (rozegranych gier)
+maxMemory = 15000 # pojemność pamięci
 
-# stworzenie środowiska, modelu sieci, oraz DQN
-env = SnakeEnvironment(segments = 4, waitTime = 1)
-nn = NeuralNetwork(len(env.screenMap)**2+1, 4, learningRate)
+# STWORZENIE ŚRODOWISKA, MODELU SIECI ORAZ DQN
+env = SnakeEnvironment(waitTime = 1, segments = 4)
+nn = NeuralNetwork(24, 4, learningRate)
 model = nn.model
-DQN = Dqn(gamma,maxMemory)
+DQN = Dqn(gamma, maxMemory)
 
-# nauka
+
+# NAUKA/TRENING
 epoch = 1
-rewardsInEpochs = []
+scoreInEpochs = []
+meanScore = 0
+bestScore = 0
 
 while epoch <= epochs:
-    env.reset() # przywrócenie środowiska do początkowych ustawień
-    # zapoczątkownie currentState i nextState [wartości z mapy ekrany i kierunek ruchu]
-    currentState = zeros((1,len(env.screenMap)**2+1))
-    for i in range(len(env.screenMap)):
-        for j in range(len(env.screenMap)):
-            currentState[0][len(env.screenMap)*i+j] = env.screenMap[i][j]
-    currentState[0][len(env.screenMap)**2] = env.direction
+    # NOWA GRA -- reset środowiska, i początkowy input
+    env.reset()
+    currentState = env.newState(False)
     nextState = currentState
     gameOver = False
-    totalReward = 0
 
-    # pojedyncza gra/epoko
     while not gameOver:
-
         # ustalenie czy podejmowana akcja będzie losowa czy predykowane przez sieć (prawdopodobieństwo = epsilon)
         if random() <= epsilon:
-            action = randint(0,3)
+            action = randint(0, 3)
         else:
             action = argmax(model.predict(currentState))
 
-        # podjęcie akcji i pobranie parametrów nextState, reward, gameOver oraz rysowanie ekranu gry
+        # podjęcie akcji
         nextState, reward, gameOver = env.step(action)
         env.drawScreen()
 
-        # umieszczenie ruchu w pamięci i trening sieci na batchu pobranym z pamięci
+        # umieszczenie ruchu w pamięci i trening sieci na pobranym batchu
         DQN.remember([currentState, action, reward, nextState], gameOver)
-        inputs, targets = DQN.getBatch(model,batchSize)
-        model.train_on_batch(inputs,targets)
+        inputs, targets = DQN.getBatch(model, batchSize)
+        model.train_on_batch(inputs, targets)
 
-        # nextState staje się currentState
         currentState = nextState
-        totalReward += reward
 
-    # print statystyki z pojedynczej epoki(gry)
-    print("Epoch:\t", epoch, "Score:\t", env.score, "Moves:\t", env.moves, "Epsilon:\t", round(epsilon,5),"Total reward:\t", totalReward )
+    # statystyki z pojedynczej gry
+    if env.score > bestScore:
+        bestScore = env.score
+    print("Epoch:\t", epoch, "Score:\t", env.score, "Moves:\t", env.moves, "Epsilon:\t", round(epsilon, 5), "Best score:", bestScore)
 
     # zmniejszenie prawdopodobieństwa losowości
-    epsilon *= epsilonMultiplier
-    rewardsInEpochs.append(totalReward)
-    totalReward = 0
-    epoch +=1
+    if epsilon > 0.05:
+        epsilon *= epsilonMultiplier
+    else:
+        epsilon = 0.05
 
-# podsumowanie całości treningu i wykres
-print("BEST REWARD:", max(rewardsInEpochs))
-plt.plot(rewardsInEpochs)
-plt.xlabel('EPOKA')
-plt.ylabel('REWARD')
-plt.show()
+    # co 100 epok -- statystyka ze 100 epok
+    meanScore+=env.score
+    if epoch % 100 == 0:
+        scoreInEpochs.append(meanScore/100)
+        print("Mean in last 100 epochs:", meanScore/100, "All time best score:", bestScore, "Actual Memory Capacity:",len(DQN.memory))
+        plt.plot(scoreInEpochs)
+        plt.xlabel('Epoki*100')
+        plt.ylabel('Średni wynik w 100 epokach')
+        plt.show()
+        meanScore = 0
+    epoch += 1
+model.save('model.h5')
