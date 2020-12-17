@@ -10,12 +10,15 @@ learningRate = 0.01  # współczynnik uczenia
 gamma = 0.9  # parametr dyskontujący do dqn
 batchSize = 128  # wielkość wkładu do sieci
 epsilon = 1  # prawdopodobieństwo podjęcia losowego ruchu przez snake'a w danej epoce
-epsilonMultiplier = 0.999  # zmiana epsilon bo każdej grze
+epsilonMultiplier = 0.9999  # zmiana epsilon po każdej grze
+minEpsilon = 0.05  # minimalna wartość prawdopodobnieństw ruchu losowego
 epochs = 100000  # liczba epok (rozegranych gier)
 maxMemory = 15000 # pojemność pamięci
+waitTime = 0  # czas pomiędzy przesunięciami węża, gdy == 0, czas przesunięcia zależy od możliwości komputera
+nSegments = 4  # ilość segmentów na jednym boku ekranu
 
 # STWORZENIE ŚRODOWISKA, MODELU SIECI ORAZ DQN
-env = SnakeEnvironment(waitTime = 1, segments = 4)
+env = SnakeEnvironment(waitTime = waitTime, segments = nSegments)
 nn = NeuralNetwork(24, 4, learningRate)
 model = nn.model
 DQN = Dqn(gamma, maxMemory)
@@ -54,27 +57,28 @@ while not win:
         currentState = nextState
 
     # zmniejszenie prawdopodobieństwa losowości
-    if epsilon > 0.05:
+    if epsilon > minEpsilon:
         epsilon *= epsilonMultiplier
     else:
-        epsilon = 0.05
+        epsilon = minEpsilon
 
     # statystyki z pojedynczej gry
-    if env.score > bestScore[0]:
+    if env.score > bestScore[0] or (env.score == bestScore[0] and env.moves < bestScore[1]):
         bestScore = [env.score,env.moves]
         print("NEW BEST SCORE:",bestScore[0],"points in", bestScore[1], "moves")
     print("Epoch:\t", epoch, "Score:\t", env.score, "Moves:\t", env.moves, "Epsilon:\t", round(epsilon, 5), "Best score:", bestScore[0])
 
     # co 100 epok -- statystyka ze 100 epok
     meanScore+=env.score
-    if epoch % 100 == 0:
-        win = True
+    if epoch % 10 == 0:
         scoreInEpochs.append(meanScore/100)
-        print("Mean in last 100 epochs:", meanScore/100, "All time best score:", bestScore, "Actual Memory Capacity:",len(DQN.memory))
+        print("--------------------------------------------------------------------------------------------------")
+        print("MEAN SCORE IN LAST 100 EPOCHS:", meanScore/100, "ALL TIME BEST SCORE:", bestScore[0], "in", bestScore[1], "moves. ACTUAL MEMORY CAPACITY:", len(DQN.memory))
         plt.plot(scoreInEpochs)
         plt.xlabel('Epoki*100')
         plt.ylabel('Średni wynik w 100 epokach')
         plt.show()
+        print("--------------------------------------------------------------------------------------------------")
         meanScore = 0
 
     # zapisanie epoki, w której pamięć się zapełniła
