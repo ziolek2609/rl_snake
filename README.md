@@ -1,4 +1,4 @@
-# Reinforcement Learning Snake
+# Reinforcement Learning Snake :snake:
 
 The aim of the project is to create an artificial neural network capable of playing a snake. I used Reinforcement Learning method to learn the network. 
 
