@@ -1,6 +1,5 @@
 # Reinforcement Learning Snake
 
-
 The aim of the project is to create an artificial neural network capable of playing a snake. I used Reinforcement Learning method to learn the network. 
 
 ## Game rules:
@@ -25,12 +24,7 @@ The aim of the project is to create an artificial neural network capable of play
 
 ## What you can do here?
 - just play the game by running snake_environment.py file :snake:
-- train your own model by main.py :memo:
-
-     You can use default parameters or you can change it. I had used my deafult seatings and you can see the results below. On the chart you can see how my model has learnt and the gif shows model can play on 4x4 board (of course you can check how it will manage on bigger boards). If you use deafult parameters you should get similar results to mine
-
-     ![chart](./images/chart.jpg) ![4x4](./images/4x4.gif)
-
+- train your own model by main.py (you can use my deafult parameters or set your own) :memo:
 - you can test trained model by test.py (you can test your own model or test mine) :clipboard:
 
 ## How the snake can learn?
@@ -40,6 +34,15 @@ Reinforcement Learning is the machine learning method, in which the agent (snake
 On input of the neural network there is the vision of the snake. Snake have vision in 8 different directions: North, North-East, East, South-East, South, South-West, West and North-West. On each direction snake 'looks' for three data: distance to the wall, distance to the potential snack and distance to the potetial snake-segment. In that way, there are 24 neurons on input to neural network. On output we have 4 neurons corresponding to 4 movements. There are 2 hidden layers, 18 neurons each. On hidden layers there is relu activation function and softmax activation on output layer.
 
 ![directions](./images/directions.jpg) ![nn](./images/nn_schema.jpg)
+
+## Results
+I have trained my model on 4x4 gameboard (i wanted not to take a lot of time) to the first win during training (score 1 points -- intial snake has 3 segments). The rewards was:
+- positive: 1.0 point
+- negative: -2.0 points
+- livingPenalty: -0.02 point
+During testing snake was able to score an average of 4.4 points on the 4x4 board with best score 13 points. The following chart shows how model has trained (mean score from last 100 games) and the gif shows how snake behave on 4x4 board (of course you can test how it will behave on bigger boards).
+
+![chart](./images/chart.jpg) ![4x4](./images/4x4.gif)
 
 
 
