@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 from dqn import Dqn
 from neural_network import NeuralNetwork
 from snake_environment import SnakeEnvironment
-from keras.models import load_model
-
 
 # PARAMETRY UCZENIA
 learningRate = 0.01  # współczynnik uczenia
@@ -18,17 +16,17 @@ epochs = 40000  # liczba epok (rozegranych gier)
 maxMemory = 15000  # pojemność pamięci
 waitTime = 0  # czas pomiędzy przesunięciami węża
 nSegments = 4  # ilość segmentów na jednym boku ekranu
-model_name = 'model_completed.h5'  # nazwa pliku z modelem do dotrenowania
+maxWin = 1  # do ilu wygranych gier ma trwać trening
 
 
-# STWORZENIE ŚRODOWISKA, MODELU SIECI ORAZ DQN
+
+# STWORZENIE ŚRODOWISKA, MODELU SIECI I DQN NA PODSTAWIE ZADANYCH PARAMETRÓW
 env = SnakeEnvironment(waitTime=waitTime, segments=nSegments)
 nn = NeuralNetwork(24, 4, learningRate)
 model = nn.model
-# model = load_model(model_name)
 DQN = Dqn(gamma, maxMemory)
 
-# NAUKA/TRENING
+# NAUKA
 epoch = 1
 scoreInEpochs = []
 meanScore = 0
@@ -36,7 +34,7 @@ bestScore = [0, 0]
 fullMemoryEpoch = 0
 win = False
 
-while (not win and epoch <= epochs):
+while (win < maxWin and epoch <= epochs):
     # NOWA GRA -- reset środowiska, i początkowy state
     env.reset()
     currentState = env.newState(False)
@@ -51,7 +49,7 @@ while (not win and epoch <= epochs):
             action = argmax(model.predict(currentState))
 
         # podjęcie akcji
-        nextState, reward, gameOver, _ = env.step(action)
+        nextState, reward, gameOver, win = env.step(action)
         env.drawScreen()
 
         # umieszczenie ruchu w pamięci i trening sieci na pobranym batchu
@@ -95,4 +93,4 @@ while (not win and epoch <= epochs):
         fullMemoryEpoch = epoch+1
 
     epoch += 1
-model.save('model2.h5')
+model.save('model.h5')
