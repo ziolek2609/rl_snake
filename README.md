@@ -27,7 +27,7 @@ The aim of the project is to create an artificial neural network capable of play
 - train your own model by main.py. You can use default parameters or you can change it. :memo:
 If you use deafult parameters you should get similar results to my:
 
-- ![chart](./images/Figure 2020-12-15 233452.png)
+![chart](images/Figure 2020-12-15 233452.png)
 
 
 
