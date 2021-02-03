@@ -36,7 +36,7 @@ On input of the neural network there is the vision of the snake. Snake have visi
 ![directions](./images/directions.jpg) ![nn](./images/nn_schema.jpg)
 
 ## Results
-I have trained my model on 4x4 gameboard (i wanted not to take a lot of time) to the first win during training (score 1 points -- intial snake has 3 segments). The rewards was:
+I have trained my model on 4x4 gameboard (i wanted this not to take a lot of time) to the first win during training (score 1 points -- intial snake has 3 segments). The rewards was:
 - positive: 1.0 point
 - negative: -2.0 points
 - livingPenalty: -0.02 point
