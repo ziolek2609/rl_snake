@@ -19,7 +19,7 @@ The aim of the project is to create an artificial neural network capable of play
 - dqn.py -- contains agent's memory ,
 - snake_environment.py -- contains the game environment, there are implemented all the game rules,
 - test.py -- it is used for testing already trained neural network model,
-- snke_condaenv.yml -- this is the Anaconda environment which is usefull to run the hole project, using appropriate versions of all required packages
+- snke_condaenv.yml -- this is the Anaconda environment contains appropriate versions of all required packeges,
 - trained_model.py -- already trained model.
 
 ## What you can do here?
