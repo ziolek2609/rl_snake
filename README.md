@@ -5,7 +5,7 @@ The aim of the project is to create an artificial neural network capable of play
 
 ## Game rules:
 - snake can only move forward, left or right. Backwards moves are blocked,
-- you win the game when the snake segments are on *every* segment of the gameboard,
+- you win the game when the snake segments are on **every** segment of the gameboard,
 - you lose if snake hit the border of the gameboard or eat itself.
 
 ## Python packeges used:
