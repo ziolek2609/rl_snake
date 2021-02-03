@@ -8,10 +8,10 @@ The aim of the project is to create an artificial neural network capable of play
 - you lose if snake hit the border of the gameboard or eat itself.
 
 ## Python packeges used:
- - [pygame](https://www.pygame.org/) v. 2.0.0
- - [tensorflow](https://www.tensorflow.org/) v. 1.14.0
- - [numpy](https://numpy.org/) v. 1.19.3
- - [matplotlib](https://matplotlib.org/) v. 3.3.3
+ - [pygame](https://www.pygame.org/) v. 2.0.0 :video_game:
+ - [tensorflow](https://www.tensorflow.org/) v. 1.14.0 :brain:
+ - [numpy](https://numpy.org/) v. 1.19.3 :1234:
+ - [matplotlib](https://matplotlib.org/) v. 3.3.3 :chart:
 
 ## Repository contains several files:
 - main.py -- it is the main file of the project, it is used to learn neural network to play,
