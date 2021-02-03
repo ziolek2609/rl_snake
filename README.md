@@ -40,6 +40,7 @@ I have trained my model on 4x4 gameboard (i wanted this not to take a lot of tim
 - positive: 1.0 point
 - negative: -2.0 points
 - livingPenalty: -0.02 point
+
 During testing snake was able to score an average of 4.4 points on the 4x4 board with best score 13 points. The following chart shows how model has trained (mean score from last 100 games) and the gif shows how snake behave on 4x4 board (of course you can test how it will behave on bigger boards).
 
 ![chart](./images/chart.jpg) ![4x4](./images/4x4.gif)
