@@ -33,7 +33,7 @@ Reinforcement Learning is the machine learning method, in which the agent (snake
 
 On the input of the neural network there is the vision of the snake. Snake have vision in 8 different directions: North (k1), North-East (k2), East (k3), South-East (k4), South (k5), South-West (k6), West (k7) and North-West (k8). On each direction snake 'looks' for three data: distance to the wall, distance to the potential snack and distance to the potential snake-segment. In that way, there are 24 neurons on input to neural network. On the output we have 4 neurons corresponding to 4 movements (up, down, left, right). There are 2 hidden layers, 18 neurons each. On the hidden layers there is relu activation function and softmax activation on the output layer.
 
-![directions](./images/directions.jpg) ![nn](./images/nn.jpg)
+![directions](./images/directions.jpg) ![nn](./images/nn_schema.jpg)
 
 ## Results
 I have trained my model on 4x4 gameboard (I wanted this not to take a lot of time) to the first win during training (score 13, because intial snake has 3 segments). The rewards were:
