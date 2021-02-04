@@ -45,7 +45,7 @@ During testing snake was able to score an average of 4.4 points on the 4x4 board
 
 ![chart](./images/chart.jpg) ![4x4](./images/4x4gf.gif)
 
-you should get results comparable to mine if you use the default settings during training the neural network model:smile:
+You should get results comparable to mine if you use the default settings during training the neural network model:smile:
 
 
 
