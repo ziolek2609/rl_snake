@@ -12,21 +12,22 @@ batchSize = 256  # wielkość wkładu do sieci
 epsilon = 1  # prawdopodobieństwo podjęcia losowego ruchu
 epsilonMultiplier = 0.999  # zmiana epsilon po każdej grze
 minEpsilon = 0.05  # minimalna wartość prawdopodobnieństw ruchu losowego
-epochs = 40000  # liczba epok (rozegranych gier)
+epochs = 10000  # liczba epok (rozegranych gier)
 maxMemory = 15000  # pojemność pamięci
 waitTime = 0  # czas pomiędzy przesunięciami węża
 nSegments = 4  # ilość segmentów na jednym boku ekranu
 maxWin = 1  # do ilu wygranych gier ma trwać trening
-
-
+visualization = False  # czy pokazywać wizualizację w pygame?
+statistics = True  # czy pokazywać statystyki z gry i wykresy?
 
 # STWORZENIE ŚRODOWISKA, MODELU SIECI I DQN NA PODSTAWIE ZADANYCH PARAMETRÓW
-env = SnakeEnvironment(waitTime=waitTime, segments=nSegments)
+env = SnakeEnvironment(waitTime=waitTime, segments=nSegments,
+                       visualization=visualization)
 nn = NeuralNetwork(24, 4, learningRate)
 model = nn.model
 DQN = Dqn(gamma, maxMemory)
 
-# NAUKA
+# ZMIENNE WYKORZYSTYWANE DO NAUKI
 epoch = 1
 scoreInEpochs = []
 meanScore = 0
@@ -50,7 +51,6 @@ while (win < maxWin and epoch <= epochs):
 
         # podjęcie akcji
         nextState, reward, gameOver, win = env.step(action)
-        env.drawScreen()
 
         # umieszczenie ruchu w pamięci i trening sieci na pobranym batchu
         DQN.remember([currentState, action, reward, nextState], gameOver)
@@ -70,22 +70,33 @@ while (win < maxWin and epoch <= epochs):
        or (env.score == bestScore[0] and
            env.moves < bestScore[1]):
         bestScore = [env.score, env.moves]
-        print("NEW BEST SCORE:", bestScore[0], "points in",
-              bestScore[1], "moves")
-    print("Epoch:\t", epoch, "Score:\t", env.score, "Moves:\t", env.moves,
-          "Epsilon:\t", round(epsilon, 5), "Best score:", bestScore[0])
+        if statistics:
+            print("NEW BEST SCORE:", bestScore[0], "points in",
+                  bestScore[1], "moves")
+    if statistics:
+        print("Epoch:\t", epoch, "Score:\t", env.score, "Moves:\t", env.moves,
+              "Epsilon:\t", round(epsilon, 5), "Best score:", bestScore[0])
 
     # co 100 epok -- statystyka ze 100 epok
     meanScore += env.score
     if epoch % 100 == 0:
         scoreInEpochs.append(meanScore/100)
-        print("MEAN SCORE IN LAST 100 EPOCHS:", meanScore/100,
-              "ALL TIME BEST SCORE:", bestScore[0], "in", bestScore[1],
-              "moves. ACTUAL MEMORY CAPACITY:", len(DQN.memory))
-        plt.plot(scoreInEpochs)
-        plt.xlabel('Epoki*100')
-        plt.ylabel('Średni wynik w 100 epokach')
-        plt.show()
+        if statistics:
+            print("MEAN SCORE IN LAST 100 EPOCHS:", meanScore/100,
+                  "ALL TIME BEST SCORE:", bestScore[0], "in", bestScore[1],
+                  "moves. ACTUAL MEMORY CAPACITY:", len(DQN.memory))
+
+        # stworzenie wykresu uczenia
+        if statistics or (epoch == epochs or win == maxWin):
+            plt.clf()
+            plt.cla()
+            plt.plot(scoreInEpochs)
+            plt.xlabel('Epochs*100')
+            plt.ylabel('Mean score in last 100 epochs')
+            if epoch == epochs or win == maxWin:
+                plt.savefig("learning_plot.jpg")
+            plt.show()
+
         meanScore = 0
 
     # zapisanie epoki, w której pamięć się zapełniła

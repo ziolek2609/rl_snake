@@ -6,7 +6,8 @@ import pygame
 class SnakeEnvironment():
     # rozpoczęcie z ustawieniami startowymi
     def __init__(self, waitTime=100, segments=10, grid=1, segmentSize=30,
-                 livingPenalty=-0.02, posReward=1, negReward=-2):
+                 livingPenalty=-0.02, posReward=1, negReward=-2,
+                 visualization=True):
 
         # STAŁE PARAMETRY ŚRODOWISKA
         # ilość segmentów na jednym boku ekranu gry
@@ -26,9 +27,12 @@ class SnakeEnvironment():
         self.NEGREWARD = negReward
         # czas pomiędzy akcjami
         self.WAITTIME = waitTime
+        # czy ma być wizualizacja w pygame?
+        self.visualization = visualization
         # ekran gry
-        self.SCREEN = pygame.display.set_mode((self.SCREENSIZE,
-                                               self.SCREENSIZE))
+        if self.visualization:
+            self.SCREEN = pygame.display.set_mode((self.SCREENSIZE,
+                                                   self.SCREENSIZE))
 
         self.reset()
 
@@ -45,7 +49,8 @@ class SnakeEnvironment():
             self.snakeLoc.append([2-i, 1])
             self.screenMap[1, 2-i] = 0.5
         self.appleLoc = self.createApple()
-        self.drawScreen()
+        if self.visualization:
+            self.drawScreen()
 
     # tworzenie jabłko w wolnej lokacji na screenMap
     def createApple(self):
@@ -287,8 +292,9 @@ class SnakeEnvironment():
 
         # aktualizacja stanu gry(inputu do sieci) i ekranu gry
         self.direction = action
-        self.drawScreen()
-        pygame.time.wait(self.WAITTIME)
+        if self.visualization:
+            self.drawScreen()
+            pygame.time.wait(self.WAITTIME)
         newState = self.newState(wallCrush)
 
         return newState, reward, gameOver, win
